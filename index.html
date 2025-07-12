@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <script type="module">
+        import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
+
+        const supabaseUrl = 'https://aatwgdcszboghcwmcwws.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFhdHdnZGNzemJvZ2hjd21jd3dzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIyOTk4MzEsImV4cCI6MjA2Nzg3NTgzMX0.8oOluztLm2_OS0OqIYzBOwgitMNZ1nYESd21N2I2Sq0';
+        const supabase = createClient(supabaseUrl, supabaseKey);
+
+        async function fetchOrders() {
+            const { data, error } = await supabase.from('orders').select().order('id', { ascending: true });
+
+            let table = `<table border="1" cellpadding="5" cellspacing="0">
+                        <tr>
+                            <th>N°</th>
+                            <th>Nom Client</th>
+                            <th>Téléphone</th>
+                            <th>Adresse</th>
+                            <th>Date</th>
+                        </tr>`;
+            for (const order of data) {
+                table += `<tr>
+                    <td>${order.id}</td>    
+                    <td>${order.nom}</td>
+                    <td>${order.tel}</td>
+                    <td>${order.adresse}</td>
+                    <td>${formatDate(order.created_at)}</td>
+                </tr>`;
+            }
+            table += '</table>';
+
+            document.getElementById('orders').innerHTML = table;
+        }
+
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            const day = String(date.getDate()).padStart(2, '0');
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const year = date.getFullYear();
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            return `${day}/${month}/${year} ${hours}:${minutes}`;
+        }
+
+        document.querySelector('form').addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const nom = document.getElementById('nom').value;
+            const tel = document.getElementById('tel').value;
+            const adresse = document.getElementById('adresse').value;
+
+            const { data, error } = await supabase.from('orders').insert([{ nom, tel, adresse }]);
+
+            if (!error)
+                fetchOrders();
+        });
+
+        fetchOrders();
+    </script>
+</head>
+
+<body>
+    <div id="orders"></div>
+
+    <form>
+        <label for="nom">Nom:<span style="color:red;">*</span></label>
+        <input type="text" id="nom" name="nom" required>
+        <br>
+        <label for="tel">Téléphone:<span style="color:red;">*</span></label>
+        <input type="text" id="tel" name="tel" required>
+        <br>
+        <label for="adresse">Adresse:</label>
+        <input type="text" id="adresse" name="adresse">
+        <br>
+        <button type="submit">Ajouter Commande</button>
+    </form>
+</body>
+
+</html>
