@@ -10,29 +10,58 @@
         const supabase = createClient(supabaseUrl, supabaseKey);
 
         async function fetchOrders() {
-            const { data, error } = await supabase.from('orders').select().order('id', { ascending: true });
+            const { data, error } = await supabase.from('orders').select().order('id', { ascending: false });
 
             let table = `<table border="1" cellpadding="5" cellspacing="0">
-                        <tr>
-                            <th>N°</th>
-                            <th>Nom Client</th>
-                            <th>Téléphone</th>
-                            <th>Adresse</th>
-                            <th>Date</th>
-                        </tr>`;
+                            <tr>
+                                <th>Nom Client</th>
+                                <th>Téléphone</th>
+                                <th>Adresse</th>
+                                <th>Produit</th>
+                                <th>Date</th>
+                            </tr>`;
             for (const order of data) {
-                table += `<tr>
-                    <td>${order.id}</td>    
+                const rowStyle = order.vu ? ' style="background-color:rgb(170, 170, 170);"' : '';
+                table += `<tr${rowStyle}>  
                     <td>${order.nom}</td>
                     <td>${order.tel}</td>
                     <td>${order.adresse}</td>
+                    <td>${order.produit}</td>
                     <td>${formatDate(order.created_at)}</td>
                 </tr>`;
             }
             table += '</table>';
 
             document.getElementById('orders').innerHTML = table;
+
+            await supabase.from('orders').update({ vu: true }).eq('vu', false);
         }
+
+
+        async function fetchInscriptions() {
+            const { data, error } = await supabase.from('inscriptions').select().order('id', { ascending: false });
+
+            let table = `<table border="1" cellpadding="5" cellspacing="0">
+                            <tr>
+                                <th>Nom Client</th>
+                                <th>Formation</th>
+                                <th>Date</th>
+                            </tr>`;
+            for (const inscription of data) {
+                const rowStyle = inscription.vu ? ' style="background-color:rgb(170, 170, 170);"' : '';
+                table += `<tr${rowStyle}>  
+                    <td>${inscription.nom}</td>
+                    <td>${inscription.formation}</td>
+                    <td>${formatDate(inscription.created_at)}</td>
+                </tr>`;
+            }
+            table += '</table>';
+
+            document.getElementById('inscriptions').innerHTML = table;
+
+            await supabase.from('inscriptions').update({ vu: true }).eq('vu', false);
+        }
+
 
         function formatDate(dateString) {
             const date = new Date(dateString);
@@ -51,30 +80,34 @@
             const adresse = document.getElementById('adresse').value;
 
             const { data, error } = await supabase.from('orders').insert([{ nom, tel, adresse }]);
-
-            if (!error)
-                fetchOrders();
+            if (!error) fetchOrders();
         });
 
         fetchOrders();
+        fetchInscriptions();
     </script>
 </head>
 
 <body>
-    <div id="orders"></div>
+    <div style="display: flex; gap: 10px;">
+        <div>
+            <div id="orders"></div>
+            <form>
+                <label for="nom">Nom:<span style="color:red;">*</span></label>
+                <input type="text" id="nom" name="nom" required>
+                <br>
+                <label for="tel">Téléphone:<span style="color:red;">*</span></label>
+                <input type="text" id="tel" name="tel" required>
+                <br>
+                <label for="adresse">Adresse:</label>
+                <input type="text" id="adresse" name="adresse">
+                <br>
+                <button type="submit">Ajouter Commande</button>
+            </form>
+        </div>
 
-    <form>
-        <label for="nom">Nom:<span style="color:red;">*</span></label>
-        <input type="text" id="nom" name="nom" required>
-        <br>
-        <label for="tel">Téléphone:<span style="color:red;">*</span></label>
-        <input type="text" id="tel" name="tel" required>
-        <br>
-        <label for="adresse">Adresse:</label>
-        <input type="text" id="adresse" name="adresse">
-        <br>
-        <button type="submit">Ajouter Commande</button>
-    </form>
+        <div id="inscriptions"></div>
+    </div>
 </body>
 
 </html>
