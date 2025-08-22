@@ -62,6 +62,29 @@
             await supabase.from('inscriptions').update({ vu: true }).eq('vu', false);
         }
 
+        async function fetchCooking() {
+            const { data, error } = await supabase.from('cooking').select().order('id', { ascending: false });
+
+            let table = `<table border="1" cellpadding="5" cellspacing="0">
+                            <tr>
+                                <th>Nom Client</th>
+                                <th>Tel</th>
+                                <th>Date</th>
+                            </tr>`;
+            for (const inscription of data) {
+                const rowStyle = inscription.vu ? ' style="background-color:rgb(170, 170, 170);"' : '';
+                table += `<tr${rowStyle}>  
+                    <td>${inscription.nom}</td>
+                    <td>${inscription.tel}</td>
+                    <td>${formatDate(inscription.created_at)}</td>
+                </tr>`;
+            }
+            table += '</table>';
+
+            document.getElementById('cooking').innerHTML = table;
+
+            await supabase.from('cooking').update({ vu: true }).eq('vu', false);
+        }
 
         function formatDate(dateString) {
             const date = new Date(dateString);
@@ -85,6 +108,7 @@
 
         fetchOrders();
         fetchInscriptions();
+        fetchCooking();
     </script>
 </head>
 
@@ -107,6 +131,7 @@
         </div>
 
         <div id="inscriptions"></div>
+        <div id="cooking"></div>
     </div>
 </body>
 
